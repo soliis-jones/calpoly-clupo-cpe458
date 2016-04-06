@@ -1,0 +1,8 @@
+ Each project team will consist of one or two students. Each team will submit one report, and team members will receive the same grade. Each team should submit the following via the handin command:
+ well documented source code, including a Makefile
+ documentation on how to build and run your program in the form of a README file.
+ The README file should provide:
+ team member names,
+ clear description of how to compile and run your program.
+ Each group will also submit a written report that provides a thorough description of the algorithm. This description should the details of the algorithm, beyond what is presented in this project description. The report should also include a description of the MPI techniques that you used along with a discussion of why those techniques were chosen. Also include the results of your experiments. These include the best solutions you arrive at for each data set given, as well as the number of iterations required to get there. You should also discuss any interesting problems that were encountered while implementing your design, and how you overcame them. Be complete, but concise.
+ You may use any data structures and libraries you choose. However, performance matters! Your programs will be run by me and a running tally of times will be kept. All programs must be able to be compiled and run on a lab linux workstation (note that compilers on Windows and Mac may not be compatible).
