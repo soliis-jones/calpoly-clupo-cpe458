@@ -4,7 +4,7 @@
 #include <mpi.h>
 
 int main(int argc, char **argv) {
-   double best = -1.0;
+   //double best = -1.0;
     int my_id, num_procs;
 
    MPI_Init(&argc, &argv);
