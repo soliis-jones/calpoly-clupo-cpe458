@@ -2,22 +2,29 @@
 #include <stdio.h>
 #include <math.h>
 #include <mpi.h>
+#include <float.h>
+
+#define NEXT 1
+#define PREV 0
 
 int main(int argc, char **argv) {
-   //double best = -1.0;
-   int my_id, num_procs, num_cities, num_iter, i, j, count;
-   int *path;
+   double best_tour = DBL_MAX, compare_tour;
+   int my_id, num_procs, num_cities, num_iter, i, j;
+   int **best_path, **compare_path;
+   MPI_Status* status;
 
    // Initial set up of arguments and path array
    num_cities = atoi(argv[1]);
-   path = malloc(atoi(num_cities*sizeof(int));
+   best_path = malloc(num_cities*2*sizeof(int));
+   compare_path = malloc(num_cities*2*sizeof(int));
    num_iter = atoi(argv[2]);
 
    // Set default tour (sequential order)
-   for (i = 0; i < num_cities - 1; i++) {
-      path[i] = i + 1;
+   for (i = 1; i < num_cities - 1; i++) {
+      path[i] = {i - 1, i +1};
    }
-   path[i] = 0;
+   path[0] = {num_cities, 1};
+   path[num_cities-1] = {num_cities-2, 0};
 
    // MPI set up
    MPI_Init(&argc, &argv);
@@ -25,26 +32,83 @@ int main(int argc, char **argv) {
    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
    // Main algorithm loop
-   for (count = 0; count < num_iter; ++count) {
-      // Select random i & j
-      i = rand() % num_cities;
-      j = rand() % num_cities;
+   for (j = 0; j < num_iter; ++j) {
+      if (my_id) {
+         // Worker Process Logic:
 
-      // Swap paths from i->j and (i+1)->(j+1)
-      // TODO: Ensure that algorithm works (doesn't break cycle)
-      paths[i] = j;
-      paths[i+1] = j+1;
+         // Calculate distance of new "tour"
+         compare_tour = generate_tour(compare_path, num_cities);
 
-      // Calculate distance of new "tour"
+         // Send data to root process
+         MPI_Send(compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+         MPI_Send(compare_tour, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      } else {
+         // Root Process Logic:
+         // In the root node, receive computations for tour and the path array
+         // for each of the other processes
+         for (i = 1; i < num_procs; ++i) {
+            MPI_Recv(compare_path, num_cities*2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(compare_tour, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-      // Compare if new tour is less than current "best"
-      if (cur_tour < best_tour) {
-         // If so, broadcast new path
-         MPI_Bcast()
+            if (compare_tour < best_tour) {
+               best_tour = compare_tour;
+               memcpy(best_path, compare_path, sizeof(int)*num_cities);
+            }
+         }
       }
+
+      MPI_Bcast(best_path, num_cities, MPI_INT, 0, 0, MPI_COMM_WORLD);
    }
 
    MPI_Finalize();
 
    return 0;
 }
+
+// path array is [from, to]
+double generate_tour(int **path, int num_cities) {
+   int i = rand() % num_cities, j = rand() % num_cities;
+   int i_next = path[i][NEXT], j_next = path[j][NEXT], current = i_next;
+   int tmp;
+
+   // To begin, swap the direction of everything between and including, i+1 and j
+   while (current != j_next) {
+      tmp = path[current][PREV];
+      path[current][PREV] = path[current][NEXT];
+      path[current][NEXT] = tmp;
+      current = path[current][NEXT];
+   }
+
+   // Finish by swaping the to's and from's of i,j and i_next,j_next
+   path[i][NEXT] = j;
+   path[j][PREV] = i;
+   path[i_next][NEXT] = j_next;
+   path[j_next][PREV] = i_next;
+
+   //TODO: calculate total distance and return
+   return 0.0;
+}
+
+
+/*
+
+0  1  2  3  4  5
+________________
+1  2  3  4  5  0
+________________
+5  0  1  2  3  4
+________________
+
+i=0, j=3
+
+0  1  2  3  4  5
+________________
+3  2  3  4  5  0
+________________
+5  0  1  2  3  4
+________________
+
+
+
+
+*/
