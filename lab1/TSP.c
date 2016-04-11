@@ -3,21 +3,46 @@
 #include <math.h>
 #include <mpi.h>
 #include <float.h>
+#include <string.h>
 
 #define NEXT 1
 #define PREV 0
 
+double generate_tour(int**, int);
+
 int main(int argc, char **argv) {
    double best_tour = DBL_MAX, compare_tour;
-   int my_id, num_procs, num_cities, num_iter, i, j;
+   int my_id, num_procs, num_cities = 0, num_iter, i, j;
    int **best_path, **compare_path;
+   char *line;
    MPI_Status* status;
+   FILE* stream;
 
    // Initial set up of arguments and path array
-   num_cities = atoi(argv[1]);
+   //num_cities = atoi(argv[1]); // This should come from the file
+   if((stream = fopen(argv[1], "r")) == NULL) {
+      perror("Error opening file");
+      exit(-1);
+   }
+   num_iter = atoi(argv[2]);
+
+   while (fgets(line, )) {
+      //skip through the beginning of the file until you reach a line with 3 numbers
+      if (/* line doesnt beginn with the number, flag hasn't been reached */) {
+         continue;
+      } else {
+         // This is a city number/x/y line
+      }
+      //parse
+
+
+      //keep track of the number of lines
+      ++num_cities;
+   }
+
    best_path = malloc(num_cities*2*sizeof(int));
    compare_path = malloc(num_cities*2*sizeof(int));
-   num_iter = atoi(argv[2]);
+
 
    // Set default tour (sequential order)
    for (i = 1; i < num_cities - 1; i++) {
@@ -44,6 +69,7 @@ int main(int argc, char **argv) {
          MPI_Send(compare_tour, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       } else {
          // Root Process Logic:
+
          // In the root node, receive computations for tour and the path array
          // for each of the other processes
          for (i = 1; i < num_procs; ++i) {
@@ -88,27 +114,3 @@ double generate_tour(int **path, int num_cities) {
    //TODO: calculate total distance and return
    return 0.0;
 }
-
-
-/*
-
-0  1  2  3  4  5
-________________
-1  2  3  4  5  0
-________________
-5  0  1  2  3  4
-________________
-
-i=0, j=3
-
-0  1  2  3  4  5
-________________
-3  2  3  4  5  0
-________________
-5  0  1  2  3  4
-________________
-
-
-
-
-*/
