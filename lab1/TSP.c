@@ -7,14 +7,15 @@
 
 #define NEXT 1
 #define PREV 0
+#define LINE_SIZE 50
 
 double generate_tour(int**, int);
 
 int main(int argc, char **argv) {
    double best_tour = DBL_MAX, compare_tour;
    int my_id, num_procs, num_cities = 0, num_iter, i, j;
-   int **best_path, **compare_path;
-   char *line;
+   int **best_path, **compare_path, **city_map, node_num;
+   char *line = malloc(LINE_SIZE), find_start = 0;
    MPI_Status* status;
    FILE* stream;
 
@@ -26,20 +27,35 @@ int main(int argc, char **argv) {
    }
    num_iter = atoi(argv[2]);
 
-   while (fgets(line, )) {
-      //skip through the beginning of the file until you reach a line with 3 numbers
-      if (/* line doesnt beginn with the number, flag hasn't been reached */) {
-         continue;
-      } else {
-         // This is a city number/x/y line
+   // Parse input file
+   while (fgets(line, INT_MAX, stream) != NULL && strcmp(line, "EOF")) {
+      //skip through the beginning of the file until you come to dimension line
+      if (find_start == 0 && (strstr(line, "DIMENSION") && find_start = 1)) {
+         //move forward through the line
+         while (*line != '\0') {
+            //upon finding first number, record and allocate map array
+            if(isdigit((int)*line)) {
+               num_cities = atoi(line);
+               city_map = malloc(num_cities*2*sizeof(int));
+            } else {
+               ++line;
+            }
+         }
       }
-      //parse
-
-
-      //keep track of the number of lines
-      ++num_cities;
+      //keep skipping through the file until we find beginning of coordinates
+      else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION") || find_start = 2)) {
+         continue;
+      } 
+      else if (find_start == 2) {
+         // This is a city number/x/y line
+         // Can ignore first token (node name)
+         node_num = atoi(strtok(line, " "));
+         city_map[node_num][0] = atoi(strtok(NULL, " "));
+         city_map[node_num][1] = atoi(strtok(NULL, " "));
+      }
    }
-
+   free(line);
+   
    best_path = malloc(num_cities*2*sizeof(int));
    compare_path = malloc(num_cities*2*sizeof(int));
 
