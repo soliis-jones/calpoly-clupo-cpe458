@@ -11,7 +11,7 @@
 #define PREV 0
 #define LINE_SIZE 50
 
-double generate_tour(int**, int);
+double generate_tour(int **, int **, int);
 
 int main(int argc, char **argv) {
    double best_tour = DBL_MAX, compare_tour;
@@ -63,13 +63,13 @@ int main(int argc, char **argv) {
 
    // Set default tour (sequential order)
    for (i = 1; i < num_cities - 1; i++) {
-      best_path[i][0] = i - 1;
-      best_path[i][1] = i +1;
+      best_path[i][PREV] = i - 1;
+      best_path[i][NEXT] = i +1;
    }
-   best_path[0][0] = num_cities;
-   best_path [0][i] = 1;
-   best_path[num_cities-1][0] = num_cities - 2;
-   best_path[num_cities-1][1] = 0;
+   best_path[0][PREV] = num_cities;
+   best_path [0][NEXT] = 1;
+   best_path[num_cities-1][PREV] = num_cities - 2;
+   best_path[num_cities-1][NEXT] = 0;
 
    // MPI set up
    MPI_Init(&argc, &argv);
@@ -80,9 +80,9 @@ int main(int argc, char **argv) {
    for (j = 0; j < num_iter; ++j) {
       if (my_id) {
          // Worker Process Logic:
-
+         
          // Calculate distance of new "tour"
-         compare_tour = generate_tour(compare_path, num_cities);
+         compare_tour = generate_tour(compare_path, city_map, num_cities);
 
          // Send data to root process
          MPI_Send(*compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD);
@@ -102,8 +102,11 @@ int main(int argc, char **argv) {
             }
          }
       }
-
+      
+      // Broadcast the best overall path to all nodes
       MPI_Bcast(&best_path, num_cities, MPI_INT, 0, MPI_COMM_WORLD);
+      // Copy new best path into variable for nodes to alter
+      memcpy(compare_path, best_path, num_cities*2*sizeof(int));
    }
 
    MPI_Finalize();
@@ -112,10 +115,11 @@ int main(int argc, char **argv) {
 }
 
 // path array is [from, to]
-double generate_tour(int **path, int num_cities) {
+double generate_tour(int **path, int **map, int num_cities) {
    int i = rand() % num_cities, j = rand() % num_cities;
    int i_next = path[i][NEXT], j_next = path[j][NEXT], current = i_next;
-   int tmp;
+   int next, tmp;
+   double line, tour = 0.0;
 
    // To begin, swap the direction of everything between and including, i+1 and j
    while (current != j_next) {
@@ -131,6 +135,15 @@ double generate_tour(int **path, int num_cities) {
    path[i_next][NEXT] = j_next;
    path[j_next][PREV] = i_next;
 
-   //TODO: calculate total distance and return
-   return 0.0;
+   // Calculate total distance of tour and return
+   current = 0;
+   do {
+      next = path[current][NEXT];
+      
+      line = (double)(map[current][0]-map[next][0])*(map[current][0]-map[next][0]);
+      line += (double)(map[current][1]-map[next][1])*(map[current][1]-map[next][1]);
+      tour += sqrt(line);
+   } while ((current = next));
+
+   return tour;
 }

@@ -1,11 +1,11 @@
 CC = mpicc
-FLAGS = -Wall -Werror -g
+FLAGS = -Wall -Werror -g -lm
 TARGET = ./bin/TSP
 
 all: TSP
 
 TSP: TSP.o bin
-	$(CC) -g -o $(TARGET) TSP.o
+	$(CC) $(FLAGS) -o $(TARGET) TSP.o
 
 TSP.o: TSP.c
 	$(CC) $(FLAGS) -o TSP.o -c TSP.c
