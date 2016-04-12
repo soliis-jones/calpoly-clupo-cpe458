@@ -4,6 +4,8 @@
 #include <mpi.h>
 #include <float.h>
 #include <string.h>
+#include <limits.h>
+#include <ctype.h>
 
 #define NEXT 1
 #define PREV 0
@@ -16,7 +18,6 @@ int main(int argc, char **argv) {
    int my_id, num_procs, num_cities = 0, num_iter, i, j;
    int **best_path, **compare_path, **city_map, node_num;
    char *line = malloc(LINE_SIZE), find_start = 0;
-   MPI_Status* status;
    FILE* stream;
 
    // Initial set up of arguments and path array
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
    // Parse input file
    while (fgets(line, INT_MAX, stream) != NULL && strcmp(line, "EOF")) {
       //skip through the beginning of the file until you come to dimension line
-      if (find_start == 0 && (strstr(line, "DIMENSION") && find_start = 1)) {
+      if (find_start == 0 && (strstr(line, "DIMENSION") && (find_start = 1))) {
          //move forward through the line
          while (*line != '\0') {
             //upon finding first number, record and allocate map array
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
          }
       }
       //keep skipping through the file until we find beginning of coordinates
-      else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION") || find_start = 2)) {
+      else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION") || (find_start = 2))) {
          continue;
       } 
       else if (find_start == 2) {
@@ -62,10 +63,13 @@ int main(int argc, char **argv) {
 
    // Set default tour (sequential order)
    for (i = 1; i < num_cities - 1; i++) {
-      path[i] = {i - 1, i +1};
+      best_path[i][0] = i - 1;
+      best_path[i][1] = i +1;
    }
-   path[0] = {num_cities, 1};
-   path[num_cities-1] = {num_cities-2, 0};
+   best_path[0][0] = num_cities;
+   best_path [0][i] = 1;
+   best_path[num_cities-1][0] = num_cities - 2;
+   best_path[num_cities-1][1] = 0;
 
    // MPI set up
    MPI_Init(&argc, &argv);
@@ -81,16 +85,16 @@ int main(int argc, char **argv) {
          compare_tour = generate_tour(compare_path, num_cities);
 
          // Send data to root process
-         MPI_Send(compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-         MPI_Send(compare_tour, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+         MPI_Send(*compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD);
+         MPI_Send(&compare_tour, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
       } else {
          // Root Process Logic:
 
          // In the root node, receive computations for tour and the path array
          // for each of the other processes
          for (i = 1; i < num_procs; ++i) {
-            MPI_Recv(compare_path, num_cities*2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(compare_tour, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(*compare_path, num_cities*2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&compare_tour, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             if (compare_tour < best_tour) {
                best_tour = compare_tour;
@@ -99,7 +103,7 @@ int main(int argc, char **argv) {
          }
       }
 
-      MPI_Bcast(best_path, num_cities, MPI_INT, 0, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&best_path, num_cities, MPI_INT, 0, MPI_COMM_WORLD);
    }
 
    MPI_Finalize();
