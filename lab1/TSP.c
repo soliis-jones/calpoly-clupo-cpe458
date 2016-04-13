@@ -21,12 +21,13 @@ int main(int argc, char **argv) {
    FILE* stream;
 
    // Initial set up of arguments and path array
-   //num_cities = atoi(argv[1]); // This should come from the file
    if((stream = fopen(argv[1], "r")) == NULL) {
       perror("Error opening file");
       exit(-1);
    }
    num_iter = atoi(argv[2]);
+   printf("Number of iterations to run %d\n", num_iter);
+   printf("Beginning parse of input file: %s\n", argv[1]);
 
    // Parse input file
    while (fgets(line, INT_MAX, stream) != NULL && strcmp(line, "EOF")) {
@@ -38,6 +39,7 @@ int main(int argc, char **argv) {
             if(isdigit((int)*line)) {
                num_cities = atoi(line);
                city_map = malloc(num_cities*2*sizeof(int));
+               printf("Detected node dimension value of: %d\n", &num_cities);
             } else {
                ++line;
             }
@@ -46,7 +48,7 @@ int main(int argc, char **argv) {
       //keep skipping through the file until we find beginning of coordinates
       else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION") || (find_start = 2))) {
          continue;
-      } 
+      }
       else if (find_start == 2) {
          // This is a city number/x/y line
          // Can ignore first token (node name)
@@ -56,21 +58,23 @@ int main(int argc, char **argv) {
       }
    }
    free(line);
-   
+   printf("Finished input file parsing.\n");
+
    best_path = malloc(num_cities*2*sizeof(int));
    compare_path = malloc(num_cities*2*sizeof(int));
 
-
+   printf("Initializing default tour...\n");
    // Set default tour (sequential order)
    for (i = 1; i < num_cities - 1; i++) {
       best_path[i][PREV] = i - 1;
-      best_path[i][NEXT] = i +1;
+      best_path[i][NEXT] = i + 1;
    }
    best_path[0][PREV] = num_cities;
-   best_path [0][NEXT] = 1;
+   best_path[0][NEXT] = 1;
    best_path[num_cities-1][PREV] = num_cities - 2;
    best_path[num_cities-1][NEXT] = 0;
 
+   printf("Begin MPI processes\n");
    // MPI set up
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
@@ -80,7 +84,7 @@ int main(int argc, char **argv) {
    for (j = 0; j < num_iter; ++j) {
       if (my_id) {
          // Worker Process Logic:
-         
+
          // Calculate distance of new "tour"
          compare_tour = generate_tour(compare_path, city_map, num_cities);
 
@@ -98,11 +102,12 @@ int main(int argc, char **argv) {
 
             if (compare_tour < best_tour) {
                best_tour = compare_tour;
-               memcpy(best_path, compare_path, sizeof(int)*num_cities);
+               memcpy(best_path, compare_path, sizeof(int)*2*num_cities);
+               printf("Root process received new best tour of value %.3f on iteration %d\n", &best_tour, &j);
             }
          }
       }
-      
+
       // Broadcast the best overall path to all nodes
       MPI_Bcast(&best_path, num_cities, MPI_INT, 0, MPI_COMM_WORLD);
       // Copy new best path into variable for nodes to alter
@@ -110,6 +115,16 @@ int main(int argc, char **argv) {
    }
 
    MPI_Finalize();
+
+   printf("TSP optimal route finder has completed.\n");
+   printf("Optimal tour distance found was %.3f\n", &best_tour);
+   printf("Optimal path:\n");
+
+   i = 0;
+   do {
+      printf("%d->", i);
+   } while ((i = best_path[i][NEXT]));
+   printf("0\n");
 
    return 0;
 }
@@ -119,7 +134,7 @@ double generate_tour(int **path, int **map, int num_cities) {
    int i = rand() % num_cities, j = rand() % num_cities;
    int i_next = path[i][NEXT], j_next = path[j][NEXT], current = i_next;
    int next, tmp;
-   double line, tour = 0.0;
+   double tour = 0.0;
 
    // To begin, swap the direction of everything between and including, i+1 and j
    while (current != j_next) {
@@ -139,10 +154,8 @@ double generate_tour(int **path, int **map, int num_cities) {
    current = 0;
    do {
       next = path[current][NEXT];
-      
-      line = (double)(map[current][0]-map[next][0])*(map[current][0]-map[next][0]);
-      line += (double)(map[current][1]-map[next][1])*(map[current][1]-map[next][1]);
-      tour += sqrt(line);
+      tour += sqrt(pow((double)(map[current][0] - map[next][0]), 2.0) +
+         pow((double)(map[current][1] - map[next][1]), 2.0));
    } while ((current = next));
 
    return tour;
