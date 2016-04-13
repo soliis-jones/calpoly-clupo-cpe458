@@ -60,8 +60,19 @@ int main(int argc, char **argv) {
    free(line);
    printf("Finished input file parsing.\n");
 
+   printf("Begin MPI processes\n");
+   // MPI set up
+   MPI_Init(&argc, &argv);
+   MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
+   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+
    best_path = malloc(num_cities*2*sizeof(int));
    compare_path = malloc(num_cities*2*sizeof(int));
+
+   if (myid) {
+      city_map = malloc(num_cities*2*sizeof(int));
+   }
+   MPI_Bcast(&city_map, num_cities*2, MPI_INT, 0, MPI_COMM_WORLD);
 
    printf("Initializing default tour...\n");
    // Set default tour (sequential order)
@@ -73,12 +84,6 @@ int main(int argc, char **argv) {
    best_path[0][NEXT] = 1;
    best_path[num_cities-1][PREV] = num_cities - 2;
    best_path[num_cities-1][NEXT] = 0;
-
-   printf("Begin MPI processes\n");
-   // MPI set up
-   MPI_Init(&argc, &argv);
-   MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
-   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
    // Main algorithm loop
    for (j = 0; j < num_iter; ++j) {
