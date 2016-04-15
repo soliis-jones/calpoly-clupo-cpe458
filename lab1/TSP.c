@@ -15,9 +15,9 @@ double generate_tour(int **, int **, int);
 
 int main(int argc, char **argv) {
    double best_tour = DBL_MAX, compare_tour;
-   int my_id, num_procs, num_cities = 0, num_iter, i, j;
+   int my_id, num_procs, num_cities = 0, num_iter, i, j = 0;
    int **best_path, **compare_path, **city_map, node_num;
-   char *line = malloc(LINE_SIZE), find_start = 0;
+   char line[LINE_SIZE], find_start = 0;
    FILE* stream;
 
    if (argc != 3) {
@@ -35,35 +35,42 @@ int main(int argc, char **argv) {
    printf("Beginning parse of input file: %s\n", argv[1]);
 
    // Parse input file
-   while (fgets(line, INT_MAX, stream) != NULL && strcmp(line, "EOF")) {
+   while (fgets(line, INT_MAX, stream) != NULL && strcmp(line, "EOF\n")) {
       //skip through the beginning of the file until you come to dimension line
       if (find_start == 0 && (strstr(line, "DIMENSION") && (find_start = 1))) {
          //move forward through the line
          while (*line != '\0') {
             //upon finding first number, record and allocate map array
-            if(isdigit((int)*line)) {
-               num_cities = atoi(line);
-               city_map = malloc(num_cities*2*sizeof(int));
+            if(isdigit((int)line[j])) {
+               num_cities = atoi(line+j);
+               city_map = (int **)malloc(num_cities*sizeof(int*));
+               for (i = 0; i < num_cities; ++i) {
+                  city_map[i] = (int *)malloc(2*sizeof(int));
+               }
                printf("Detected node dimension value of: %d\n", num_cities);
                break;
             } else {
-               ++line;
+               ++j;
             }
          }
       }
       //keep skipping through the file until we find beginning of coordinates
-      else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION") || (find_start = 2))) {
+      else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION\n") || (find_start = 2))) {
          continue;
       }
       else if (find_start == 2) {
          // This is a city number/x/y line
          // Can ignore first token (node name)
+         printf("Parsing line: %s",line);
          node_num = atoi(strtok(line, " "));
-         city_map[node_num][0] = atoi(strtok(NULL, " "));
-         city_map[node_num][1] = atoi(strtok(NULL, " "));
+         //printf("nodenum: %d, X: %d, Y:%d\n", node_num,atoi(strtok(NULL, " ")),atoi(strtok(NULL, " ")) );
+         
+         city_map[node_num-1][0] = atoi(strtok(NULL, " "));
+         city_map[node_num-1][1] = atoi(strtok(NULL, " "));
+         printf("Got #%d X[%d] Y[%d]\n", node_num, city_map[node_num-1][0], city_map[node_num-1][1]);
       }
    }
-   free(line);
+   puts("FLAG1");
    printf("Finished input file parsing.\n");
 
    printf("Begin MPI processes\n");
@@ -72,17 +79,23 @@ int main(int argc, char **argv) {
    MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-   best_path = malloc(num_cities*2*sizeof(int));
-   compare_path = malloc(num_cities*2*sizeof(int));
+   best_path = malloc(num_cities*sizeof(int*));
+   compare_path = malloc(num_cities*sizeof(int*));
 
    if (my_id) {
-      city_map = malloc(num_cities*2*sizeof(int));
+      city_map = (int**)malloc(num_cities*sizeof(int*));
+      for (i = 0; i < num_cities; ++i) {
+         city_map[i] = (int*)malloc(2*sizeof(int));
+      }
    }
    MPI_Bcast(&city_map, num_cities*2, MPI_INT, 0, MPI_COMM_WORLD);
 
    printf("Initializing default tour...\n");
    // Set default tour (sequential order)
    for (i = 1; i < num_cities - 1; i++) {
+      best_path[i] = (int*)malloc(2*sizeof(int));
+
+      
       best_path[i][PREV] = i - 1;
       best_path[i][NEXT] = i + 1;
    }
