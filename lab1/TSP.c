@@ -20,6 +20,11 @@ int main(int argc, char **argv) {
    char *line = malloc(LINE_SIZE), find_start = 0;
    FILE* stream;
 
+   if (argc != 3) {
+      printf("Usage: %s input_file num_iterations\n", argv[0]);
+      exit(-1);
+   }
+
    // Initial set up of arguments and path array
    if((stream = fopen(argv[1], "r")) == NULL) {
       perror("Error opening file");
@@ -39,7 +44,8 @@ int main(int argc, char **argv) {
             if(isdigit((int)*line)) {
                num_cities = atoi(line);
                city_map = malloc(num_cities*2*sizeof(int));
-               printf("Detected node dimension value of: %d\n", &num_cities);
+               printf("Detected node dimension value of: %d\n", num_cities);
+               break;
             } else {
                ++line;
             }
@@ -69,7 +75,7 @@ int main(int argc, char **argv) {
    best_path = malloc(num_cities*2*sizeof(int));
    compare_path = malloc(num_cities*2*sizeof(int));
 
-   if (myid) {
+   if (my_id) {
       city_map = malloc(num_cities*2*sizeof(int));
    }
    MPI_Bcast(&city_map, num_cities*2, MPI_INT, 0, MPI_COMM_WORLD);
@@ -108,7 +114,7 @@ int main(int argc, char **argv) {
             if (compare_tour < best_tour) {
                best_tour = compare_tour;
                memcpy(best_path, compare_path, sizeof(int)*2*num_cities);
-               printf("Root process received new best tour of value %.3f on iteration %d\n", &best_tour, &j);
+               printf("Root process received new best tour of value %.3f on iteration %d\n", best_tour, j);
             }
          }
       }
@@ -122,7 +128,7 @@ int main(int argc, char **argv) {
    MPI_Finalize();
 
    printf("TSP optimal route finder has completed.\n");
-   printf("Optimal tour distance found was %.3f\n", &best_tour);
+   printf("Optimal tour distance found was %.3f\n", best_tour);
    printf("Optimal path:\n");
 
    i = 0;
