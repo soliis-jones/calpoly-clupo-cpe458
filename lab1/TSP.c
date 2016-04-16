@@ -11,12 +11,12 @@
 #define PREV 0
 #define LINE_SIZE 50
 
-double generate_tour(int **, int **, int);
+double generate_tour(int *, int *, int);
 
 int main(int argc, char **argv) {
    double best_tour = DBL_MAX, compare_tour;
    int my_id, num_procs, num_cities = 0, num_iter, i, j = 0;
-   int **best_path, **compare_path, **city_map, node_num;
+   int *best_path, *compare_path, *city_map, node_num;
    char line[LINE_SIZE], find_start = 0;
    FILE* stream;
 
@@ -43,10 +43,7 @@ int main(int argc, char **argv) {
             //upon finding first number, record and allocate map array
             if(isdigit((int)line[j])) {
                num_cities = atoi(line+j);
-               city_map = (int **)malloc(num_cities*sizeof(int*));
-               for (i = 0; i < num_cities; ++i) {
-                  city_map[i] = (int *)malloc(2*sizeof(int));
-               }
+               city_map = malloc(num_cities*2*sizeof(int));
                printf("Detected node dimension value of: %d\n", num_cities);
                break;
             } else {
@@ -62,12 +59,12 @@ int main(int argc, char **argv) {
          // This is a city number/x/y line
          // Can ignore first token (node name)
          printf("Parsing line: %s",line);
-         node_num = atoi(strtok(line, " "));
+         node_num = atoi(strtok(line, " ")) - 1;
          //printf("nodenum: %d, X: %d, Y:%d\n", node_num,atoi(strtok(NULL, " ")),atoi(strtok(NULL, " ")) );
          
-         city_map[node_num-1][0] = atoi(strtok(NULL, " "));
-         city_map[node_num-1][1] = atoi(strtok(NULL, " "));
-         printf("Got #%d X[%d] Y[%d]\n", node_num, city_map[node_num-1][0], city_map[node_num-1][1]);
+         city_map[node_num*2 + 0] = atoi(strtok(NULL, " "));
+         city_map[node_num*2 + 1] = atoi(strtok(NULL, " "));
+         printf("Got #%d X[%d] Y[%d]\n", node_num, city_map[node_num*2 + 0], city_map[node_num*2 + 1]);
       }
    }
    puts("FLAG1");
@@ -78,31 +75,27 @@ int main(int argc, char **argv) {
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
-   best_path = malloc(num_cities*sizeof(int*));
-   compare_path = malloc(num_cities*sizeof(int*));
-
+   
+   // Allocate arrays for paths
+   best_path = malloc(num_cities*2*sizeof(int));
+   compare_path = malloc(num_cities*2*sizeof(int));
+   
+   // Allocate array for map in all but root node
    if (my_id) {
-      city_map = (int**)malloc(num_cities*sizeof(int*));
-      for (i = 0; i < num_cities; ++i) {
-         city_map[i] = (int*)malloc(2*sizeof(int));
-      }
+      city_map = malloc(num_cities*2*sizeof(int*));
    }
-   MPI_Bcast(&city_map, num_cities*2, MPI_INT, 0, MPI_COMM_WORLD);
+   MPI_Bcast(city_map, num_cities*2, MPI_INT, 0, MPI_COMM_WORLD);
 
    printf("Initializing default tour...\n");
    // Set default tour (sequential order)
    for (i = 1; i < num_cities - 1; i++) {
-      best_path[i] = (int*)malloc(2*sizeof(int));
-
-      
-      best_path[i][PREV] = i - 1;
-      best_path[i][NEXT] = i + 1;
+      best_path[i*2 + PREV] = i - 1;
+      best_path[i*2 + NEXT] = i + 1;
    }
-   best_path[0][PREV] = num_cities;
-   best_path[0][NEXT] = 1;
-   best_path[num_cities-1][PREV] = num_cities - 2;
-   best_path[num_cities-1][NEXT] = 0;
+   best_path[PREV] = num_cities;
+   best_path[NEXT] = 1;
+   best_path[(num_cities-1)*2 + PREV] = num_cities - 2;
+   best_path[(num_cities-1)*2 + NEXT] = 0;
 
    // Main algorithm loop
    for (j = 0; j < num_iter; ++j) {
@@ -113,7 +106,7 @@ int main(int argc, char **argv) {
          compare_tour = generate_tour(compare_path, city_map, num_cities);
 
          // Send data to root process
-         MPI_Send(*compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD);
+         MPI_Send(compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD);
          MPI_Send(&compare_tour, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
       } else {
          // Root Process Logic:
@@ -121,7 +114,7 @@ int main(int argc, char **argv) {
          // In the root node, receive computations for tour and the path array
          // for each of the other processes
          for (i = 1; i < num_procs; ++i) {
-            MPI_Recv(*compare_path, num_cities*2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(compare_path, num_cities*2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&compare_tour, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             if (compare_tour < best_tour) {
@@ -133,7 +126,7 @@ int main(int argc, char **argv) {
       }
 
       // Broadcast the best overall path to all nodes
-      MPI_Bcast(&best_path, num_cities, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(best_path, num_cities*2, MPI_INT, 0, MPI_COMM_WORLD);
       // Copy new best path into variable for nodes to alter
       memcpy(compare_path, best_path, num_cities*2*sizeof(int));
    }
@@ -147,39 +140,39 @@ int main(int argc, char **argv) {
    i = 0;
    do {
       printf("%d->", i);
-   } while ((i = best_path[i][NEXT]));
+   } while ((i = best_path[i*2 + NEXT]));
    printf("0\n");
 
    return 0;
 }
 
 // path array is [from, to]
-double generate_tour(int **path, int **map, int num_cities) {
+double generate_tour(int *path, int *map, int num_cities) {
    int i = rand() % num_cities, j = rand() % num_cities;
-   int i_next = path[i][NEXT], j_next = path[j][NEXT], current = i_next;
+   int i_next = path[i*2 + NEXT], j_next = path[j*2 + NEXT], current = i_next;
    int next, tmp;
    double tour = 0.0;
 
    // To begin, swap the direction of everything between and including, i+1 and j
    while (current != j_next) {
-      tmp = path[current][PREV];
-      path[current][PREV] = path[current][NEXT];
-      path[current][NEXT] = tmp;
-      current = path[current][NEXT];
+      tmp = path[current*2 + PREV];
+      path[current*2 + PREV] = path[current*2 + NEXT];
+      path[current*2 + NEXT] = tmp;
+      current = path[current*2 + NEXT];
    }
 
    // Finish by swaping the to's and from's of i,j and i_next,j_next
-   path[i][NEXT] = j;
-   path[j][PREV] = i;
-   path[i_next][NEXT] = j_next;
-   path[j_next][PREV] = i_next;
+   path[i*2 + NEXT] = j;
+   path[j*2 + PREV] = i;
+   path[i_next*2 + NEXT] = j_next;
+   path[j_next*2 + PREV] = i_next;
 
    // Calculate total distance of tour and return
    current = 0;
    do {
-      next = path[current][NEXT];
-      tour += sqrt(pow((double)(map[current][0] - map[next][0]), 2.0) +
-         pow((double)(map[current][1] - map[next][1]), 2.0));
+      next = path[current*2 + NEXT];
+      tour += sqrt(pow((double)(map[current*2 + 0] - map[next*2 + 0]), 2.0) +
+         pow((double)(map[current*2 + 1] - map[next*2 + 1]), 2.0));
    } while ((current = next));
 
    return tour;
