@@ -154,9 +154,9 @@ int main(int argc, char **argv) {
       memcpy(compare_path, best_path, num_cities*2*sizeof(int));
    }
 
-   if (my_id) {
-      exit(0);
-   }
+   //if (my_id) {
+   //   exit(0);
+   //}
    
    if (!my_id) {
       printf("TSP optimal route finder has completed.\n");
