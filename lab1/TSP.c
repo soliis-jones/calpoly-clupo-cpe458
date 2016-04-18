@@ -13,12 +13,13 @@
 #define PREV 0
 #define LINE_SIZE 50
 
-double generate_tour(int *, int *, int);
+double generate_tour(int *, double *, int);
 
 int main(int argc, char **argv) {
    double best_tour = DBL_MAX, compare_tour;
    int my_id, num_procs, num_cities = 0;
-   int *best_path, *compare_path, *city_map, node_num, i;
+   int *best_path, *compare_path, node_num, i;
+   double *city_map;
    unsigned long num_iter, j = 0;
    char line[LINE_SIZE], find_start = 0;
    FILE* stream;
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
                //upon finding first number, record and allocate map array
                if(isdigit((int)line[j])) {
                   num_cities = atoi(line+j);
-                  city_map = malloc(num_cities*2*sizeof(int));
+                  city_map = malloc(num_cities*2*sizeof(double));
                   //printf("Detected node dimension value of: %d\n", num_cities);
                   break;
                } else {
@@ -75,8 +76,8 @@ int main(int argc, char **argv) {
             node_num = atoi(strtok(line, " ")) - 1;
             //printf("nodenum: %d, X: %d, Y:%d\n", node_num,atoi(strtok(NULL, " ")),atoi(strtok(NULL, " ")) );
             
-            city_map[node_num*2 + 0] = atoi(strtok(NULL, " "));
-            city_map[node_num*2 + 1] = atoi(strtok(NULL, " "));
+            city_map[node_num*2 + 0] = atof(strtok(NULL, " "));
+            city_map[node_num*2 + 1] = atof(strtok(NULL, " "));
             //printf("Got #%d X[%d] Y[%d]\n", node_num, city_map[node_num*2 + 0], city_map[node_num*2 + 1]);
          }
       }
@@ -184,7 +185,7 @@ int main(int argc, char **argv) {
 }
 
 // path array is [from, to]
-double generate_tour(int *path, int *map, int num_cities) {
+double generate_tour(int *path, double *map, int num_cities) {
    int i, j, i_next, j_next, current;
    int next, tmp;
    double tour = 0.0;
@@ -232,8 +233,8 @@ double generate_tour(int *path, int *map, int num_cities) {
    current = 0;
    do {
       next = path[current*2 + NEXT];
-      tour += sqrt(pow((double)(map[current*2 + 0] - map[next*2 + 0]), 2.0) +
-         pow((double)(map[current*2 + 1] - map[next*2 + 1]), 2.0));
+      tour += sqrt(pow((map[current*2 + 0] - map[next*2 + 0]), 2.0) +
+         pow((map[current*2 + 1] - map[next*2 + 1]), 2.0));
       //printf("next: %d, tour: %lf\n", next, tour);
    } while ((current = next));
 
