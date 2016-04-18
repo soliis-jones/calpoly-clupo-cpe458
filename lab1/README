@@ -4,6 +4,8 @@ Team Members: Robert Jones & Travis Michael
 Compiling:
   Running a simple "make" command will install the "TSP" executable to a bin directory in the present working directory.
   
+  The program will compile on Cal Poly CSL machines unix11, unix12, unix13, and unix14 as well as all machines in the distributed systems lab.
+
 Running:
   Our TSP executable takes in 2 positional command line arguments.
     1. The path and/or name of the input file.
