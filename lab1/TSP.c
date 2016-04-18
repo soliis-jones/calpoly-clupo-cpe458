@@ -76,6 +76,8 @@ int main(int argc, char **argv) {
             printf("Got #%d X[%d] Y[%d]\n", node_num, city_map[node_num*2 + 0], city_map[node_num*2 + 1]);
          }
       }
+      fclose(stream);
+
       puts("FLAG1");
       printf("Finished input file parsing.\n");
       
@@ -126,7 +128,7 @@ int main(int argc, char **argv) {
          MPI_Send(compare_path, num_cities*2, MPI_INT, 0, 0, MPI_COMM_WORLD);
          MPI_Send(&compare_tour, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
       } else {
-         sleep(2);
+         //sleep(2);
          // Root Process Logic:
          printf("Root node ready to receive\n");
          // In the root node, receive computations for tour and the path array
@@ -152,18 +154,23 @@ int main(int argc, char **argv) {
       memcpy(compare_path, best_path, num_cities*2*sizeof(int));
    }
 
-   MPI_Finalize();
+   if (my_id) {
+      exit(0);
+   }
+   
+   if (!my_id) {
+      printf("TSP optimal route finder has completed.\n");
+      printf("Optimal tour distance found was %.3f\n", best_tour);
+      printf("Optimal path:\n");
 
-   printf("TSP optimal route finder has completed.\n");
-   printf("Optimal tour distance found was %.3f\n", best_tour);
-   printf("Optimal path:\n");
+      i = 0;
+      do {
+         printf("%d->", i);
+      } while ((i = best_path[i*2 + NEXT]));
+      printf("0\n");
+   }
 
-   i = 0;
-   do {
-      printf("%d->", i);
-   } while ((i = best_path[i*2 + NEXT]));
-   printf("0\n");
-
+   //MPI_Finalize();
    return 0;
 }
 
@@ -177,19 +184,17 @@ double generate_tour(int *path, int *map, int num_cities) {
    while (i >= j) {
       i = rand() % num_cities;
       j = rand() % num_cities;
-   }
-
-   int c;
-   for (c = 0; c < 10; ++c) {
-      printf("index: %d, prev: %d, next: %d\n", c, path[c*2 + PREV], path[c*2 + NEXT]);
+      i_next = path[i*2 + NEXT];
+      j_next = path[j*2 + NEXT];
+      current = i_next;
    }
 
    printf("i = %d, j = %d, i_next = %d, j_next = %d, current = %d\n", i, j, i_next, j_next, current);
-   int count = 0;
+   /*int count = 0;
    do {
       printf("%d->", count);
    } while ((count = path[count*2 + NEXT]));
-   printf("0\n");
+   printf("0\n");*/
 
    // To begin, swap the direction of everything between and including, i+1 and j
    while (current != j_next) {
@@ -208,11 +213,11 @@ double generate_tour(int *path, int *map, int num_cities) {
    path[i_next*2 + NEXT] = j_next;
    path[j_next*2 + PREV] = i_next;
    
-   count = 0;
+   /*count = 0;
    do {
       printf("%d->", count);
    } while ((count = path[count*2 + NEXT]));
-   printf("0\n");
+   printf("0\n");*/
    
    printf("Calculating tour distance\n");
    // Calculate total distance of tour and return
