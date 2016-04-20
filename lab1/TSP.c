@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
             }
          }
          //keep skipping through the file until we find beginning of coordinates
-         else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION\n") || (find_start = 2))) {
+         else if (find_start == 1 && (strcmp(line, "NODE_COORD_SECTION\n")|| (find_start = 2))) {
             continue;
          }
          else if (find_start == 2) {
