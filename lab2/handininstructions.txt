@@ -1,0 +1,2 @@
+Hand in using the command:
+handin clupo 469_project2 Makefile <source files> report.pdf README
