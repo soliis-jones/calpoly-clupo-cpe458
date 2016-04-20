@@ -1,3 +1,18 @@
+/* 
+ * TSP.c
+ * Authors: Travis E Michael & Bobby Jones
+ *
+ * TSP.c will take an input file of cities and their corresponding coordinates
+ * and use an algorithm to produce random new mutations in several processes 
+ * using the MPI framework (specifically OpenMPI). The algorithm will be 
+ * repeated for the number of iterations specified by the command line
+ * argument.
+ *
+ * Usage: mpirun -np [# Processes] TSP [Input File] [# Iterations]
+ *
+ * Last Updated: 4/19/16
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -165,9 +180,9 @@ int main(int argc, char **argv) {
    //}
    //MPI_Barrier(MPI_COMM_WORLD);
    if (!my_id) {
-      printf("TSP optimal route finder has completed.\n");
-      printf("Optimal tour distance found was %f\n", best_tour);
-      printf("Optimal path:\n");
+      printf("TSP best route finder has completed.\n");
+      printf("Best tour distance found was %f\n", best_tour);
+      printf("Best path:\n");
 
       i = 0;
       do {
