@@ -1,4 +1,4 @@
-import redis
+#import redis
 from board import Board
 
 

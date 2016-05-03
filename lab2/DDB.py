@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #Authors: Bobby Jones & Travis Michael
 
 #imports go here
@@ -5,6 +6,10 @@ import sys
 import csv
 import leveldb
 
+from simpleRaft.states import *
+from simpleRaft.messages import *
+from simpleRaft.servers import *
+from simpleRaft.boards import *
 #functions
 
 
@@ -23,7 +28,7 @@ def main():
          if rownum == 0:
             header = row
             print reader.fieldnames
-         else
+         else:
             print row            # prints each row
             dict[row['Date']] = {row['Volume'], row['Adj Close']}
    except csv.Error as e:
