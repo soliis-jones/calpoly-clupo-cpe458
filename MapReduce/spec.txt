@@ -1,0 +1,37 @@
+Due:  11:59 pm, Saturday May 28.
+You may work in pairs on this assignment.
+Summary
+
+In this project you will use MapReduce to analyze data from real stock closing prices for the five most cash rich companies in the US. Apple (AAPL), Microsoft (MSFT), Alphabet (GOOGL), Cisco Systems (CSCO) and Oracle (ORCL) are sitting on $504 billion, or 30%, of the $1.7 trillion in cash and cash equivalents held by U.S. non-financial companies in 2015 [http://usat.ly/1TrD5sE]. You値l compare the stock performance of these companies to the S&P 500 and NASDAQ indexes. The stock data includes each daily opening price, max, min, closing price, volume, and adjusted closing price for each day the company has been publicly traded until the present (going back as far as Dec. 31, 1969).
+We will use the processing capabilities of the MPAC Lab to analyze real stock data to observe statistical trends for three values: Volume Traded, Adjusted Closing Price, and Daily Differential (Closing Price - Opening Price). For each dataset, you will compute a histogram for each of these three values.
+Algorithm
+
+For histograms, there is no best number of bins, and different bin sizes can reveal different features of the data. Using wider bins where the density is low reduces noise due to sampling randomness; using narrower bins where the density is high (so the signal drowns the noise) gives greater precision to the density estimation. Depending on the actual data distribution and the goals of the analysis, experimentation is usually needed to determine an appropriate width. There are, however, various useful guidelines and rules of thumb.
+The number of bins k can be calculated from a suggested bin width h as:
+k = \left \lceil \frac{\max x - \min x}{h} \right \rceil.
+The braces indicate the ceiling function.
+For this project, we値l use the Rice Rule for number of bins, k = \lceil 2 n^{1/3}\rceil, where n is the number elements, and use that value to determine the bin width h. Note that k must be an integer.
+
+Deliverables
+
+You値l be using MapReduce MPI for this project. For each of the three analyzed values (volume, closing price, and differential) for each dataset, you値l need to compute k and h. The maximum and minimum values should also be computed using MapReduce.
+Your program should be able to run (correctly) in three modes:
+Single process on one machine
+10 processes on one machine
+One process on each of 10 machines.
+You will produce 21 histograms; three for each of the seven datasets. All of these datasets are small enough that you should be able to verify them using your favorite spreadsheet application. Note that the mode in which you run your program should have no impact on your histograms.
+You should implement your program in one of C/C++/python/Oink. You can utilize any data structures or classes you like, and should explore the already implemented functionality of MR-MPI.
+Each project team will consist of one or two students. Each team will submit one report, and team members will receive the same grade. Each team should submit the following via the handin command:
+well documented source code, including a Makefile
+documentation on how to build and run your program in the form of a README file.
+The README file should provide:
+team member names,
+clear description of how to compile and run your program.
+Each group will also submit a report that graphically displays each of the 21 histograms. The report should also include a description of the MR-MPI techniques that you used along with a discussion of why those techniques were chosen. Also include the results of your experiments. These include the best solutions you arrive at for each data set given, as well as the number of iterations required to get there. You should also discuss any interesting problems that were encountered while implementing your design, and how you overcame them. Be complete, but concise.
+Input
+
+stockdata.tgz
+Handin Instructions
+
+Hand in using the command:
+handin clupo 469_mrmpi <source files> report.pdf README
