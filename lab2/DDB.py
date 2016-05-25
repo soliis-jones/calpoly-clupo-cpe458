@@ -27,10 +27,13 @@ def main():
       for row in reader:      # iterates the rows of the file in order
          if rownum == 0:
             header = row
-            print reader.fieldnames
+            print row
+            rownum += 1
+            # print row['Date'], row['Open'], row['High'], row['Low'], row['Close'], row['Volume'], row['Adj Close']
          else:
             print row            # prints each row
-            dict[row['Date']] = {row['Volume'], row['Adj Close']}
+            d = {row['Date'] : (row['Volume'], row['Adj Close'])}
+            # d[row['Date']] = {row['Volume'], row['Adj Close']}
    except csv.Error as e:
       sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
    finally:
