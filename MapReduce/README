@@ -1,0 +1,20 @@
+Bobby Jones & Travis E Michael
+CPE 458
+Dr. Lupo
+
+Deliverables:
+cmapreduce.h
+mapreduce.c
+Makefile
+report.pdf
+
+Usage: mapreduce <input_file>
+
+In order to compile the program, the user needs to download the mrmpi library 
+and follow the instructions to make the dynamic library (libmrmpi.so). When 
+compiling, the LD_LIBRARY_PATH environment variable needs to have an entry for 
+the directory containing the dynamic library file. Then, compile the program 
+using "make" or "make all". The program must be run with the mpirun command 
+provided by openmpi.
+
+Example run: mpirun -n 10 mapreduce.c stockdata/aapl.csv

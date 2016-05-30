@@ -7,7 +7,7 @@
 #include <float.h>
 #include <math.h>
 
-#include "mrmpi-7Apr14/src/cmapreduce.h"
+#include "cmapreduce.h"
 
 #define MAX(A,B) (((A > B) ? A : B))
 #define MIN(A,B) (((A < B) ? A : B))
