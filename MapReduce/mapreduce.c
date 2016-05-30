@@ -113,7 +113,7 @@ int main (int argc, char **argv) {
    MPI_Barrier(MPI_COMM_WORLD);
    MR_sort_keys_flag(vol_mr, 1); 
    if (my_id == 0) 
-      printf("\nVOL: \n");
+      printf("\nVolume Traded: \n");
    //MR_map_mr(vol_mr, vol_mr, &print_pairs, NULL);
    MR_print(vol_mr, -1, 1, 1, 1);
    
@@ -123,7 +123,7 @@ int main (int argc, char **argv) {
    MPI_Barrier(MPI_COMM_WORLD);
    MR_sort_keys_flag(adj_mr, 1);
    if (my_id == 0)
-      printf("\nADJ: \n");
+      printf("\nAdjusted Closing Price: \n");
    //MR_map_mr(adj_mr, adj_mr, &print_pairs, NULL);
    MR_print(adj_mr, -1, 1, 1, 1);
 
@@ -133,7 +133,7 @@ int main (int argc, char **argv) {
    MPI_Barrier(MPI_COMM_WORLD);
    MR_sort_keys_flag(diff_mr, 1);
    if (my_id == 0)
-      printf("\nDIFF: \n");
+      printf("\nDaily Differential: \n");
    //MR_map_mr(diff_mr, diff_mr, &print_pairs, NULL);
    MR_print(diff_mr, -1, 1, 1, 1);
 

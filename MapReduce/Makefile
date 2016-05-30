@@ -4,7 +4,7 @@ TARGET = mapreduce
 
 all: $(TARGET)
 
-$(TARGET): mapreduce.c bin
+$(TARGET): mapreduce.c
 	$(CC) $(FLAGS) -L. -lmrmpi mapreduce.c libmrmpi.so -o $(TARGET) 
 
 clean:

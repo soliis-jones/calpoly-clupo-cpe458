@@ -1,0 +1,97 @@
+Num entries: 7613
+Num bins: 40
+
+Volume Traded: 
+KV pair: proc 0, sizes 4 4, key 0, value 2265
+KV pair: proc 0, sizes 4 4, key 1, value 3672
+KV pair: proc 0, sizes 4 4, key 2, value 1117
+KV pair: proc 0, sizes 4 4, key 3, value 318
+KV pair: proc 0, sizes 4 4, key 4, value 123
+KV pair: proc 0, sizes 4 4, key 5, value 48
+KV pair: proc 0, sizes 4 4, key 6, value 19
+KV pair: proc 0, sizes 4 4, key 7, value 18
+KV pair: proc 0, sizes 4 4, key 8, value 9
+KV pair: proc 0, sizes 4 4, key 9, value 4
+KV pair: proc 0, sizes 4 4, key 10, value 4
+KV pair: proc 0, sizes 4 4, key 12, value 2
+KV pair: proc 0, sizes 4 4, key 13, value 1
+KV pair: proc 0, sizes 4 4, key 14, value 4
+KV pair: proc 0, sizes 4 4, key 15, value 6
+KV pair: proc 0, sizes 4 4, key 16, value 1
+KV pair: proc 0, sizes 4 4, key 31, value 1
+KV pair: proc 0, sizes 4 4, key 39, value 1
+
+Adjusted Closing Price: 
+KV pair: proc 0, sizes 4 4, key 0, value 1870
+KV pair: proc 0, sizes 4 4, key 1, value 451
+KV pair: proc 0, sizes 4 4, key 2, value 275
+KV pair: proc 0, sizes 4 4, key 3, value 424
+KV pair: proc 0, sizes 4 4, key 4, value 198
+KV pair: proc 0, sizes 4 4, key 5, value 91
+KV pair: proc 0, sizes 4 4, key 6, value 63
+KV pair: proc 0, sizes 4 4, key 7, value 156
+KV pair: proc 0, sizes 4 4, key 8, value 152
+KV pair: proc 0, sizes 4 4, key 9, value 425
+KV pair: proc 0, sizes 4 4, key 10, value 364
+KV pair: proc 0, sizes 4 4, key 11, value 205
+KV pair: proc 0, sizes 4 4, key 12, value 117
+KV pair: proc 0, sizes 4 4, key 13, value 169
+KV pair: proc 0, sizes 4 4, key 14, value 147
+KV pair: proc 0, sizes 4 4, key 15, value 212
+KV pair: proc 0, sizes 4 4, key 16, value 152
+KV pair: proc 0, sizes 4 4, key 17, value 185
+KV pair: proc 0, sizes 4 4, key 18, value 122
+KV pair: proc 0, sizes 4 4, key 19, value 74
+KV pair: proc 0, sizes 4 4, key 20, value 60
+KV pair: proc 0, sizes 4 4, key 21, value 72
+KV pair: proc 0, sizes 4 4, key 22, value 82
+KV pair: proc 0, sizes 4 4, key 23, value 119
+KV pair: proc 0, sizes 4 4, key 24, value 105
+KV pair: proc 0, sizes 4 4, key 25, value 135
+KV pair: proc 0, sizes 4 4, key 26, value 175
+KV pair: proc 0, sizes 4 4, key 27, value 127
+KV pair: proc 0, sizes 4 4, key 28, value 99
+KV pair: proc 0, sizes 4 4, key 29, value 75
+KV pair: proc 0, sizes 4 4, key 30, value 62
+KV pair: proc 0, sizes 4 4, key 31, value 107
+KV pair: proc 0, sizes 4 4, key 32, value 109
+KV pair: proc 0, sizes 4 4, key 33, value 115
+KV pair: proc 0, sizes 4 4, key 34, value 125
+KV pair: proc 0, sizes 4 4, key 35, value 72
+KV pair: proc 0, sizes 4 4, key 36, value 57
+KV pair: proc 0, sizes 4 4, key 37, value 55
+KV pair: proc 0, sizes 4 4, key 38, value 9
+KV pair: proc 0, sizes 4 4, key 39, value 1
+
+Daily Differential: 
+KV pair: proc 0, sizes 4 4, key 0, value 100
+KV pair: proc 0, sizes 4 4, key 1, value 580
+KV pair: proc 0, sizes 4 4, key 2, value 2547
+KV pair: proc 0, sizes 4 4, key 3, value 611
+KV pair: proc 0, sizes 4 4, key 4, value 55
+KV pair: proc 0, sizes 4 4, key 5, value 18
+KV pair: proc 0, sizes 4 4, key 6, value 10
+KV pair: proc 0, sizes 4 4, key 7, value 6
+KV pair: proc 0, sizes 4 4, key 8, value 13
+KV pair: proc 0, sizes 4 4, key 9, value 14
+KV pair: proc 0, sizes 4 4, key 10, value 8
+KV pair: proc 0, sizes 4 4, key 11, value 25
+KV pair: proc 0, sizes 4 4, key 12, value 49
+KV pair: proc 0, sizes 4 4, key 13, value 117
+KV pair: proc 0, sizes 4 4, key 14, value 312
+KV pair: proc 0, sizes 4 4, key 15, value 884
+KV pair: proc 0, sizes 4 4, key 16, value 1221
+KV pair: proc 0, sizes 4 4, key 17, value 649
+KV pair: proc 0, sizes 4 4, key 18, value 235
+KV pair: proc 0, sizes 4 4, key 19, value 76
+KV pair: proc 0, sizes 4 4, key 20, value 35
+KV pair: proc 0, sizes 4 4, key 21, value 19
+KV pair: proc 0, sizes 4 4, key 22, value 8
+KV pair: proc 0, sizes 4 4, key 23, value 4
+KV pair: proc 0, sizes 4 4, key 24, value 10
+KV pair: proc 0, sizes 4 4, key 25, value 2
+KV pair: proc 0, sizes 4 4, key 27, value 1
+KV pair: proc 0, sizes 4 4, key 28, value 1
+KV pair: proc 0, sizes 4 4, key 29, value 1
+KV pair: proc 0, sizes 4 4, key 30, value 1
+KV pair: proc 0, sizes 4 4, key 39, value 1
