@@ -16,9 +16,8 @@
 void vol_map(int, void *, void *);
 void adj_map(int, void *, void *);
 void diff_map(int, void *, void *);
-
 void my_reduce(char *, int, char *, int, int *, void *, void *);
-int ncompare(char *, int, char *, int);
+void print_pairs(uint64_t, char *, int , char *, int, void *, void *);
 
 enum Bins {
    VOL,
@@ -27,18 +26,18 @@ enum Bins {
 };
 
 typedef struct Entry {
-   char date[11];
    double vol;
    double adj;
    double diff;
 } Entry;
 
+double bin_width[3];
+
 int main (int argc, char **argv) {
-   int my_id, num_procs, num_entries = 0, i = 0;
-   int num_bins, bin_width[3];
+   int my_id, num_procs, num_entries = 0, num_bins, i = 0;
    double max[3] = {-DBL_MAX, -DBL_MAX, -DBL_MAX};
    double min[3] = {DBL_MAX, DBL_MAX, DBL_MAX};
-   char line[100];
+   char line[200];
    FILE *fp;
    Entry *entries;
 
@@ -46,7 +45,7 @@ int main (int argc, char **argv) {
    MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-   if (argc != 2 ) {
+   if (argc != 2) {
       if (my_id == 0)
          perror("Usage: mapreduce <input_file>\n");
       MPI_Abort(MPI_COMM_WORLD, 1);
@@ -57,15 +56,15 @@ int main (int argc, char **argv) {
       MPI_Abort(MPI_COMM_WORLD, -1);
    }
    
-   fgets(line, INT_MAX, fp);
+   fgets(line, 200, fp);
    while (EOF != (fscanf(fp, "%*[^\n]"), fscanf(fp, "%*c")))
       ++num_entries;
    entries = malloc(num_entries*sizeof(Entry));
 
    fseek(fp, 0, SEEK_SET);
-   fgets(line, INT_MAX, fp);
+   fgets(line, 200, fp);
    while (fgets(line, INT_MAX, fp) != NULL && !strstr(line, "EOF")) {
-      strcpy(entries[i].date, strtok(line, ","));
+      strtok(line, ",");
       entries[i].diff = atof(strtok(NULL, ","));
       strtok(NULL, ",");
       strtok(NULL, ",");
@@ -79,50 +78,99 @@ int main (int argc, char **argv) {
       min[VOL] = MIN(entries[i].vol, min[VOL]);
       min[ADJ] = MIN(entries[i].adj, min[ADJ]);
       min[DIFF] = MIN(entries[i].diff, min[DIFF]);
+
+      entries[i].diff += -min[DIFF];
       
       //if (my_id == 0) {
       //   printf("%s: %lf, %lf, %lf\n", entries[i].date, entries[i].vol, entries[i].adj, entries[i].diff);
       i++;
    }
-   free(fp);
+
+   max[DIFF] += -min[DIFF];
+   min[DIFF] = 0;
    
    num_bins = (int)(2*pow(num_entries, 0.333333) + 1);
-   bin_width[VOL] = (max[VOL] - min[VOL])/num_bins;
-   bin_width[ADJ] = (max[ADJ] - min[ADJ])/num_bins;
-   bin_width[DIFF] = (max[DIFF] - min[DIFF])/num_bins;
+   bin_width[VOL] = (max[VOL] - min[VOL])/(num_bins-1);
+   bin_width[ADJ] = (max[ADJ] - min[ADJ])/(num_bins-1);
+   bin_width[DIFF] = (max[DIFF] - min[DIFF])/(num_bins-1);
    
    if (my_id == 0) {
       printf("Num entries: %d\n", num_entries);
       printf("Num bins: %d\n", num_bins);
-      for (i = 0; i < 3; ++i)
-         printf("%d\n", bin_width[i]);
+      //for (i = 0; i < 3; ++i)
+         //printf("%lf\n", bin_width[i]);
    }
 
-   void *mr = MR_create(MPI_COMM_WORLD);
-   MR_set_verbosity(mr, 2);
-   MR_set_timer(mr, 1);
+   void *vol_mr = MR_create(MPI_COMM_WORLD);
+   void *adj_mr = MR_create(MPI_COMM_WORLD);
+   void *diff_mr = MR_create(MPI_COMM_WORLD);
 
    MPI_Barrier(MPI_COMM_WORLD);
 
-   MR_map(mr, num_entries, &vol_map, entries);
-   MR_collate(mr, NULL);
-   //MR_map(mr, num_entries, &adj_map, entries);
-   //MR_map(mr, num_entries, &diff_map, entries);
-   MR_reduce(mr, &my_reduce, NULL);
-
+   MR_map(vol_mr, num_entries, &vol_map, entries);
+   MR_collate(vol_mr, NULL);
+   MR_reduce(vol_mr, &my_reduce, NULL);
    MPI_Barrier(MPI_COMM_WORLD);
-   MR_sort_values(mr, &ncompare);
+   MR_sort_keys_flag(vol_mr, 1); 
+   if (my_id == 0) 
+      printf("\nVOL: \n");
+   //MR_map_mr(vol_mr, vol_mr, &print_pairs, NULL);
+   MR_print(vol_mr, -1, 1, 1, 1);
    
-   MR_destroy(mr);
+   MR_map(adj_mr, num_entries, &adj_map, entries);
+   MR_collate(adj_mr, NULL);
+   MR_reduce(adj_mr, &my_reduce, NULL);
+   MPI_Barrier(MPI_COMM_WORLD);
+   MR_sort_keys_flag(adj_mr, 1);
+   if (my_id == 0)
+      printf("\nADJ: \n");
+   //MR_map_mr(adj_mr, adj_mr, &print_pairs, NULL);
+   MR_print(adj_mr, -1, 1, 1, 1);
+
+   MR_map(diff_mr, num_entries, &diff_map, entries);
+   MR_collate(diff_mr, NULL);
+   MR_reduce(diff_mr, &my_reduce, NULL);
+   MPI_Barrier(MPI_COMM_WORLD);
+   MR_sort_keys_flag(diff_mr, 1);
+   if (my_id == 0)
+      printf("\nDIFF: \n");
+   //MR_map_mr(diff_mr, diff_mr, &print_pairs, NULL);
+   MR_print(diff_mr, -1, 1, 1, 1);
+
+
+   MR_destroy(vol_mr);
+   MR_destroy(adj_mr);
+   MR_destroy(diff_mr);
+   free(fp);
    free(entries);
    MPI_Finalize();
-   return 0;
 }
 
 void vol_map(int itask, void *kv, void *ptr) {
    Entry *entry = (Entry *)ptr;
+   int key; 
 
-   MR_kv_add(kv, (char *)&entry->vol, sizeof(double), NULL, 0);
+   key = entry[itask].vol/bin_width[VOL];
+
+   MR_kv_add(kv, (char *)&key, sizeof(int), NULL, 0);
+}
+
+void adj_map(int itask, void *kv, void *ptr) {
+   Entry *entry = (Entry *)ptr;
+   int key; 
+
+   key = entry[itask].adj/bin_width[ADJ];
+
+   MR_kv_add(kv, (char *)&key, sizeof(int), NULL, 0);
+}
+
+void diff_map(int itask, void *kv, void *ptr) {
+   Entry *entry = (Entry *)ptr;
+   int key; 
+
+   key = entry[itask].diff/bin_width[DIFF];
+
+   MR_kv_add(kv, (char *)&key, sizeof(int), NULL, 0);
 }
 
 void my_reduce(char *key, int key_bytes, char *multivalue, int nvalues,
@@ -130,25 +178,10 @@ void my_reduce(char *key, int key_bytes, char *multivalue, int nvalues,
    MR_kv_add(kv, key, key_bytes, (char *)&nvalues, sizeof(int));
 }
 
-void adj_map(int itask, void *kv, void *ptr) {
-   Entry *entry = (Entry *)ptr;
-
-   MR_kv_add(kv, entry->date, strlen(entry->date), (char *)&entry->adj, 
-    sizeof(double));
-}
-
-void diff_map(int itask, void *kv, void *ptr) {
-   Entry *entry = (Entry *)ptr;
-
-   MR_kv_add(kv, entry->date, strlen(entry->date), (char *)&entry->diff, 
-    sizeof(double));
-}
-
-int ncompare(char *p1, int len1, char *p2, int len2) {
-   int i1 = *(int *)p1;
-   int i2 = *(int *)p2;
-   
-   if (i1 == i2)
-      return 0;
-   return i1 > i2 ? -1 : 1;
-}
+//void print_pairs(uint64_t itask, char *key, int key_bytes, char *value,
+// int value_bytes, void *kv, void *ptr) {
+//   printf("%02d: %13.2lf ", *(int *)key, bin_width[VOL]*itask);
+//   for (int i = 0; i < *(int *)value; i += 100)
+//      printf("|");
+//   printf(" %d\n", *(int *)value);
+//}
