@@ -144,6 +144,7 @@ int main (int argc, char **argv) {
    free(fp);
    free(entries);
    MPI_Finalize();
+   return 0;
 }
 
 void vol_map(int itask, void *kv, void *ptr) {
